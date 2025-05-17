@@ -1,0 +1,257 @@
+basePath: /api/v1
+definitions:
+  models.Pagination:
+    properties:
+      current_page:
+        example: 1
+        type: integer
+      items_per_page:
+        example: 10
+        type: integer
+      total_items:
+        example: 50
+        type: integer
+      total_pages:
+        example: 5
+        type: integer
+    type: object
+  models.Service:
+    properties:
+      created_at:
+        example: "2025-05-01T00:00:00Z"
+        type: string
+      description:
+        example: Manages user authentication and profiles
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: User Service
+        type: string
+      updated_at:
+        example: "2025-05-01T00:00:00Z"
+        type: string
+      version_count:
+        example: 1
+        type: integer
+      versions:
+        items:
+          $ref: '#/definitions/models.Version'
+        type: array
+    type: object
+  models.ServiceResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/models.Pagination'
+      services:
+        items:
+          $ref: '#/definitions/models.Service'
+        type: array
+    type: object
+  models.Version:
+    properties:
+      created_at:
+        example: "2025-05-01T00:00:00Z"
+        type: string
+      description:
+        example: Initial release
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      service_id:
+        example: 1
+        type: integer
+      updated_at:
+        example: "2025-05-01T00:00:00Z"
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API for managing services
+  title: Services API
+  version: "1.0"
+paths:
+  /services:
+    get:
+      description: Get a list of services with optional filtering, sorting, and pagination
+      parameters:
+      - description: Filter by service name (case-insensitive, partial match)
+        in: query
+        name: name
+        type: string
+      - description: Filter by service description (case-insensitive, partial match)
+        in: query
+        name: description
+        type: string
+      - default: name
+        description: Sort field (name, created_at)
+        in: query
+        name: sort
+        type: string
+      - default: asc
+        description: Sort order (asc, desc)
+        in: query
+        name: order
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      responses:
+        "200":
+          description: List of services
+          schema:
+            $ref: '#/definitions/models.ServiceResponse'
+        "500":
+          description: Error message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List services
+      tags:
+      - services
+  /services/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get details of a service by ID
+      parameters:
+      - description: Service ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service details with versions
+          schema:
+            $ref: '#/definitions/models.Service'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Service not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a service
+      tags:
+      - services
+  /services/{id}/versions:
+    get:
+      consumes:
+      - application/json
+      description: Get details of a service by ID
+      parameters:
+      - description: Service ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service details with versions
+          schema:
+            $ref: '#/definitions/models.Service'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Service not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a service
+      tags:
+      - services
+  /services/{id}/versions/{versionId}:
+    get:
+      consumes:
+      - application/json
+      description: Get details of a service version by ID
+      parameters:
+      - description: Service ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: Version ID
+        in: path
+        minimum: 1
+        name: versionId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service version details
+          schema:
+            $ref: '#/definitions/models.Version'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Service version not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a service version
+      tags:
+      - services
+swagger: "2.0"
