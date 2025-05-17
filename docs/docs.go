@@ -37,7 +37,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "default": "name",
+                        "default": "created_at",
                         "description": "Sort field (name, created_at)",
                         "name": "sort",
                         "in": "query"
@@ -84,6 +84,56 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Create a new service with the given name and description",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Create a new service",
+                "parameters": [
+                    {
+                        "description": "Service details",
+                        "name": "service",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ServiceModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created service",
+                        "schema": {
+                            "$ref": "#/definitions/models.ServiceModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/services/{id}": {
@@ -111,7 +161,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Service details with versions",
+                        "description": "Service details",
                         "schema": {
                             "$ref": "#/definitions/models.Service"
                         }
@@ -144,21 +194,13 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/services/{id}/versions": {
-            "get": {
-                "description": "Get details of a service by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
+            },
+            "delete": {
+                "description": "Delete a service with the given ID",
                 "tags": [
                     "services"
                 ],
-                "summary": "Get a service",
+                "summary": "Delete a service",
                 "parameters": [
                     {
                         "minimum": 1,
@@ -170,10 +212,74 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Service details with versions",
+                    "204": {
+                        "description": "Service deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/models.Service"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Service not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update a service with the given ID and details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Update a service",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Service details",
+                        "name": "service",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ServiceModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated service",
+                        "schema": {
+                            "$ref": "#/definitions/models.ServiceModel"
                         }
                     },
                     "400": {
@@ -332,6 +438,35 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ServiceModel": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-05-01T00:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Manages user authentication and profiles"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "User Service"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-05-01T00:00:00Z"
+                },
+                "version_count": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "models.ServiceResponse": {
             "type": "object",
             "properties": {
@@ -341,7 +476,7 @@ const docTemplate = `{
                 "services": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Service"
+                        "$ref": "#/definitions/models.ServiceModel"
                     }
                 }
             }
@@ -385,9 +520,9 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "",
+	Host:             "localhost:8080",
 	BasePath:         "/api/v1",
-	Schemes:          []string{},
+	Schemes:          []string{"http"},
 	Title:            "Services API",
 	Description:      "API for managing services",
 	InfoInstanceName: "swagger",

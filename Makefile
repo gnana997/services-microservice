@@ -61,3 +61,7 @@ docker-compose-up:
 
 docker-compose-down:
 	docker-compose down
+
+# Load sample data into Postgres via docker-compose
+db-load:
+	docker-compose exec -T db psql -U kong -d kong_db -f ./scripts/sample_data.sql

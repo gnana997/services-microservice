@@ -76,7 +76,7 @@ func (s *Server) setupRoutes() {
 	// API v1 routes
 	v1 := s.router.Group("/api/v1")
 	{
-		// setup auth middleware
+		// setup auth middleware for all the protected routes
 		// v1.Use(middleware.AuthMiddleware())
 
 		// Services endpoints
@@ -84,7 +84,10 @@ func (s *Server) setupRoutes() {
 		{
 			services.GET("", serviceHandler.ListServices)
 			services.GET("/:id", serviceHandler.GetService)
-			services.GET("/:id/versions", serviceHandler.GetServiceVersions)
+			services.GET("/:id/versions/:versionId", serviceHandler.GetServiceVersion)
+			services.POST("", serviceHandler.CreateService)
+			services.PATCH("/:id", serviceHandler.UpdateService)
+			services.DELETE("/:id", serviceHandler.DeleteService)
 		}
 	}
 

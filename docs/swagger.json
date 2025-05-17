@@ -1,4 +1,7 @@
 {
+    "schemes": [
+        "http"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "API for managing services",
@@ -6,6 +9,7 @@
         "contact": {},
         "version": "1.0"
     },
+    "host": "localhost:8080",
     "basePath": "/api/v1",
     "paths": {
         "/services": {
@@ -30,7 +34,7 @@
                     },
                     {
                         "type": "string",
-                        "default": "name",
+                        "default": "created_at",
                         "description": "Sort field (name, created_at)",
                         "name": "sort",
                         "in": "query"
@@ -77,6 +81,56 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Create a new service with the given name and description",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Create a new service",
+                "parameters": [
+                    {
+                        "description": "Service details",
+                        "name": "service",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ServiceModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created service",
+                        "schema": {
+                            "$ref": "#/definitions/models.ServiceModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/services/{id}": {
@@ -104,7 +158,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Service details with versions",
+                        "description": "Service details",
                         "schema": {
                             "$ref": "#/definitions/models.Service"
                         }
@@ -137,21 +191,13 @@
                         }
                     }
                 }
-            }
-        },
-        "/services/{id}/versions": {
-            "get": {
-                "description": "Get details of a service by ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
+            },
+            "delete": {
+                "description": "Delete a service with the given ID",
                 "tags": [
                     "services"
                 ],
-                "summary": "Get a service",
+                "summary": "Delete a service",
                 "parameters": [
                     {
                         "minimum": 1,
@@ -163,10 +209,74 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Service details with versions",
+                    "204": {
+                        "description": "Service deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/models.Service"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Service not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update a service with the given ID and details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "services"
+                ],
+                "summary": "Update a service",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Service ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Service details",
+                        "name": "service",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ServiceModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated service",
+                        "schema": {
+                            "$ref": "#/definitions/models.ServiceModel"
                         }
                     },
                     "400": {
@@ -325,6 +435,35 @@
                 }
             }
         },
+        "models.ServiceModel": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-05-01T00:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Manages user authentication and profiles"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "User Service"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-05-01T00:00:00Z"
+                },
+                "version_count": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "models.ServiceResponse": {
             "type": "object",
             "properties": {
@@ -334,7 +473,7 @@
                 "services": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Service"
+                        "$ref": "#/definitions/models.ServiceModel"
                     }
                 }
             }

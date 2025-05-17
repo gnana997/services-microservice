@@ -11,8 +11,17 @@ type Service struct {
 	Description string    `json:"description" example:"Manages user authentication and profiles"`
 	CreatedAt   time.Time `json:"created_at" example:"2025-05-01T00:00:00Z"`
 	UpdatedAt   time.Time `json:"updated_at" example:"2025-05-01T00:00:00Z"`
-	Versions    []Version `json:"versions,omitempty" gorm:"foreignKey:ServiceID"`
+	Versions    []Version `json:"versions" gorm:"foreignKey:ServiceID"`
 	VersionCount int       `json:"version_count" gorm:"-" example:"1"`
+}
+
+type ServiceModel struct {
+	ID uint `json:"id" example:"1"`
+	Name string `json:"name" example:"User Service"`
+	Description string `json:"description" example:"Manages user authentication and profiles"`
+	CreatedAt time.Time `json:"created_at" example:"2025-05-01T00:00:00Z"`
+	UpdatedAt time.Time `json:"updated_at" example:"2025-05-01T00:00:00Z"`
+	VersionCount int `json:"version_count" example:"1"`
 }
 
 // Version represents a version of a service
@@ -38,7 +47,7 @@ type ServiceFilter struct {
 
 // ServiceResponse represents the response for service list
 type ServiceResponse struct {
-	Services   []Service   `json:"services"`
+	Services   []ServiceModel   `json:"services"`
 	Pagination Pagination  `json:"pagination"`
 }
 

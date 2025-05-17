@@ -18,18 +18,26 @@ var (
 type ServiceRepository interface {
 	// ListServices retrieves a paginated list of services based on filter criteria.
 	// It returns the matched services, the total count of matches, and any error encountered.
-	ListServices(ctx context.Context, filter models.ServiceFilter) ([]models.Service, int, error)
+	ListServices(ctx context.Context, filter models.ServiceFilter) ([]models.ServiceModel, int, error)
 	
 	// GetService retrieves a single service by its ID.
 	// It returns the service with its associated versions or an error if not found.
 	GetService(ctx context.Context, id uint) (*models.Service, error)
 	
-	// GetServiceVersions retrieves all versions associated with a service ID.
-	// It returns a list of versions or an error if the service doesn't exist.
-	GetServiceVersions(ctx context.Context, serviceID uint) ([]models.Version, error)
-
 	// GetServiceVersion retrieves a single version for a service
 	GetServiceVersion(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error)
+
+	// CreateService creates a new service
+	// It returns the created service or an error if the service creation fails.
+	CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
+
+	// UpdateService updates a service
+	// It returns the updated service or an error if the service update fails or if the service is not found.
+	UpdateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
+
+	// DeleteService deletes a service
+	// It returns an error if the service deletion fails or if the service is not found.
+	DeleteService(ctx context.Context, id uint) error
 }
 
 // serviceRepositoryImpl implements ServiceRepository
@@ -45,8 +53,9 @@ func NewServiceRepository(db *gorm.DB) ServiceRepository {
 }
 
 // ListServices returns paginated services with filtering and sorting
-func (r *serviceRepositoryImpl) ListServices(ctx context.Context, filter models.ServiceFilter) ([]models.Service, int, error) {
+func (r *serviceRepositoryImpl) ListServices(ctx context.Context, filter models.ServiceFilter) ([]models.ServiceModel, int, error) {
 	var services []models.Service
+	var servicesModel []models.ServiceModel = make([]models.ServiceModel, 0)
 	var total int64
 
 	query := r.db.WithContext(ctx).Model(&models.Service{})
@@ -123,15 +132,22 @@ func (r *serviceRepositoryImpl) ListServices(ctx context.Context, filter models.
 
 		// Update services with their respective version counts
 		for i := range services {
+			var serviceModel models.ServiceModel
+			serviceModel.ID = services[i].ID
+			serviceModel.Name = services[i].Name
+			serviceModel.Description = services[i].Description
+			serviceModel.CreatedAt = services[i].CreatedAt
+			serviceModel.UpdatedAt = services[i].UpdatedAt
 			if count, exists := countMap[services[i].ID]; exists {
-				services[i].VersionCount = count
+				serviceModel.VersionCount = count
 			} else {
-				services[i].VersionCount = 0
+				serviceModel.VersionCount = 0
 			}
+			servicesModel = append(servicesModel, serviceModel)
 		}
 	}
 
-	return services, int(total), nil
+	return servicesModel, int(total), nil
 }
 
 // GetService returns a single service by ID
@@ -149,25 +165,7 @@ func (r *serviceRepositoryImpl) GetService(ctx context.Context, id uint) (*model
 		return nil, err
 	}
 
-	service.VersionCount = len(service.Versions)
-
 	return &service, nil
-}
-
-// GetServiceVersions returns all versions for a service
-func (r *serviceRepositoryImpl) GetServiceVersions(ctx context.Context, serviceID uint) ([]models.Version, error) {
-	var versions []models.Version
-	
-	err := r.db.WithContext(ctx).
-		Where("service_id = ?", serviceID).
-		Order("created_at DESC").
-		Find(&versions).Error
-	
-	if err != nil {
-		return nil, err
-	}
-
-	return versions, nil
 }
 
 // GetServiceVersion returns a single version for a service
@@ -188,3 +186,33 @@ func (r *serviceRepositoryImpl) GetServiceVersion(ctx context.Context, serviceID
 	return &version, nil
 }
 
+// CreateService creates a new service
+// It returns the created service or an error if the service creation fails.
+func (r *serviceRepositoryImpl) CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
+	if err := r.db.WithContext(ctx).Model(&models.Service{}).Create(&service).Error; err != nil {
+		return nil, err
+	}
+	return &service, nil
+}
+
+// UpdateService updates a service
+func (r *serviceRepositoryImpl) UpdateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
+	if err := r.db.WithContext(ctx).Model(&models.Service{}).Where("id = ?", service.ID).Updates(&service).Error; err != nil {
+		return nil, err
+	}
+	return &service, nil
+}
+
+// DeleteService deletes a service by ID and all the versions of the service
+func (r *serviceRepositoryImpl) DeleteService(ctx context.Context, id uint) error {
+	if err := r.db.WithContext(ctx).Delete(&models.Service{}, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrNotFound
+		}
+		return err
+	}
+	if err := r.db.WithContext(ctx).Where("service_id = ?", id).Delete(&models.Version{}).Error; err != nil {
+		return err
+	}
+	return nil
+}

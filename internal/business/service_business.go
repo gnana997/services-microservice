@@ -22,13 +22,22 @@ type BusinessService interface {
 	// GetService retrieves a single service by its ID.
 	// Returns the service with its associated versions or ErrServiceNotFound if not found.
 	GetService(ctx context.Context, id uint) (*models.Service, error)
-	
-	// GetServiceVersions retrieves all versions for a specific service.
-	// Returns ErrServiceNotFound if the service doesn't exist.
-	GetServiceVersions(ctx context.Context, serviceID uint) ([]models.Version, error)
 
 	// GetServiceVersion retrieves a single version for a service
+	// Returns the version or ErrServiceNotFound if not found.
 	GetServiceVersion(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error)
+
+	// CreateService creates a new service
+	// Returns the created service or an error if the service creation fails.
+	CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
+
+	// UpdateService updates a service
+	// Returns the updated service or an error if the service update fails or if the service is not found.
+	UpdateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
+
+	// DeleteService deletes a service and all the versions of the service
+	// Returns an error if the service deletion fails or if the service is not found.
+	DeleteService(ctx context.Context, id uint) error
 }
 
 // businessServiceImpl implements BusinessService
@@ -76,22 +85,22 @@ func (s *businessServiceImpl) GetService(ctx context.Context, id uint) (*models.
 	return service, nil
 }
 
-// GetServiceVersions returns all versions for a service
-func (s *businessServiceImpl) GetServiceVersions(ctx context.Context, serviceID uint) ([]models.Version, error) {
-	// First check if service exists
-	_, err := s.repo.GetService(ctx, serviceID)
-	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			return nil, ErrServiceNotFound
-		}
-		return nil, err
-	}
-
-	return s.repo.GetServiceVersions(ctx, serviceID)
-}
-
 // GetServiceVersion returns a single version for a service
 func (s *businessServiceImpl) GetServiceVersion(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error) {
 	return s.repo.GetServiceVersion(ctx, serviceID, versionID)
 }
 
+// CreateService creates a new service
+func (s *businessServiceImpl) CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
+	return s.repo.CreateService(ctx, service)
+}
+
+// UpdateService updates a service
+func (s *businessServiceImpl) UpdateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
+	return s.repo.UpdateService(ctx, service)
+}
+
+// DeleteService deletes a service and all the versions of the service
+func (s *businessServiceImpl) DeleteService(ctx context.Context, id uint) error {
+	return s.repo.DeleteService(ctx, id)
+}

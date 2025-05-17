@@ -19,6 +19,24 @@ A Service Go MicroService for managing services and their versions in an organiz
    go run main.go
    ```
 
+---
+
+**Alternatively, you can use Docker Compose to start both the API and the Postgres database:**
+
+```bash
+docker-compose up
+```
+
+This will start both the API service and the Postgres database as defined in `docker-compose.yaml`.
+
+**To load sample data into Postgres for testing the application:**
+
+```bash
+make db-load
+```
+
+This will execute the `sample_data.sql` script and populate the database with sample services and versions.
+
 ## API Endpoints
 
 ### List Services
@@ -79,30 +97,6 @@ Response:
 }
 ```
 
-### Get Service Versions
-
-```
-GET /api/v1/services/:id/versions
-```
-
-Response:
-
-```json
-{
-  "versions": [
-    {
-      "id": 1,
-      "service_id": 1,
-      "version": "1.0.0",
-      "description": "Initial release",
-      "is_active": true,
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
-    }
-  ]
-}
-```
-
 ### Get Service Version
 
 ```
@@ -133,7 +127,11 @@ Response:
 
 ```json
 {
-  "status": "ok"
+  "status": "ok",
+  "version": "1.0.0",
+  "components": {
+    "database": "ok"
+  }
 }
 ```
 

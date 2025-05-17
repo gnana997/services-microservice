@@ -20,6 +20,8 @@ import (
 // @version 1.0
 // @description API for managing services
 // @BasePath /api/v1
+// @host localhost:8080
+// @schemes http
 
 func main() {
 	// Load configuration
