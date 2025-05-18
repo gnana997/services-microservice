@@ -24,9 +24,6 @@ type ServiceRepository interface {
 	// It returns the service with its associated versions or an error if not found.
 	GetService(ctx context.Context, id uint) (*models.Service, error)
 	
-	// GetServiceVersion retrieves a single version for a service
-	GetServiceVersion(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error)
-
 	// CreateService creates a new service
 	// It returns the created service or an error if the service creation fails.
 	CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)

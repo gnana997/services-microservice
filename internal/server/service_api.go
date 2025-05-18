@@ -59,13 +59,16 @@ func (s *Server) Run(addr string) error {
 func (s *Server) setupRoutes() {
 	// Initialize repositories
 	serviceRepo := repository.NewServiceRepository(s.db)
+	versionRepo := repository.NewVersionRepository(s.db)
 	
 	// Initialize services
-	businessService := business.NewBusinessService(serviceRepo)
+	serviceBusiness := business.NewServiceBusiness(serviceRepo)
+	versionBusiness := business.NewVersionBusiness(versionRepo)
 	
 	// Initialize handlers
-	serviceHandler := handlers.NewServiceHandler(businessService)
-
+	serviceHandler := handlers.NewServiceHandler(serviceBusiness)
+	versionHandler := handlers.NewVersionHandler(versionBusiness)
+	
 	// Initialize Swagger UI
 	s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.NewHandler()))
 
@@ -84,11 +87,20 @@ func (s *Server) setupRoutes() {
 		{
 			services.GET("", serviceHandler.ListServices)
 			services.GET("/:id", serviceHandler.GetService)
-			services.GET("/:id/versions/:versionId", serviceHandler.GetServiceVersion)
 			services.POST("", serviceHandler.CreateService)
 			services.PATCH("/:id", serviceHandler.UpdateService)
 			services.DELETE("/:id", serviceHandler.DeleteService)
 		}
+
+		// Versions endpoints
+		versions := v1.Group("/versions")
+		{
+			versions.POST("", versionHandler.CreateVersion)
+			versions.GET("/:id", versionHandler.GetVersion)
+			versions.PUT("/:id", versionHandler.UpdateVersion)
+			versions.DELETE("/:id", versionHandler.DeleteVersion)
+		}
+		
 	}
 
 	// Enhanced health check

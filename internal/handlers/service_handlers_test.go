@@ -97,24 +97,6 @@ func TestGetServiceHandler_Success(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "Test Service")
 }
 
-func TestGetServiceVersionHandler(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	mockSvc := &mockBusinessService{
-		GetServiceVersionFn: func(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error) {
-			return &models.Version{ID: versionID, Version: "1.0.0"}, nil
-		},
-	}
-	h := NewServiceHandler(mockSvc)
-	r := gin.New()
-	r.GET("/services/:id/versions/:versionId", h.GetServiceVersion)
-
-	req, _ := http.NewRequest("GET", "/services/1/versions/2", nil)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "1.0.0")
-} 
-
 func TestCreateServiceHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockSvc := &mockBusinessService{

@@ -117,60 +117,6 @@ func (h *ServiceHandler) GetService(c *gin.Context) {
 	c.JSON(http.StatusOK, svc)
 }
 
-// GetServiceVersion godoc
-// @Summary Get a service version
-// @Description Get details of a service version by ID
-// @Tags services
-// @Accept json
-// @Produce json
-// @Param id path integer true "Service ID" minimum(1)
-// @Param versionId path integer true "Version ID" minimum(1)
-// @Success 200 {object} models.Version "Service version details"
-// @Failure 400 {object} map[string]string "Bad request"
-// @Failure 404 {object} map[string]string "Service version not found"
-// @Failure 500 {object} map[string]string "Error message"
-// @Router /services/{id}/versions/{versionId} [get]
-func (h *ServiceHandler) GetServiceVersion(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "invalid_service_id",
-			Message: "The service ID must be a positive integer",
-			Details: fmt.Sprintf("Provided ID: %s", c.Param("id")),
-		})
-		return
-	}
-
-	versionId, err := strconv.ParseUint(c.Param("versionId"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Code:    "invalid_version_id",
-			Message: "The version ID must be a positive integer",
-			Details: fmt.Sprintf("Provided ID: %s", c.Param("versionId")),
-		})
-		return
-	}
-
-	version, err := h.service.GetServiceVersion(c.Request.Context(), uint(id), uint(versionId))
-	if err != nil {
-		if err == business.ErrServiceNotFound {
-			c.JSON(http.StatusNotFound, ErrorResponse{
-				Code:    "service_not_found",
-				Message: fmt.Sprintf("Service with ID %d could not be found", id),
-			})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, ErrorResponse{
-			Code:    "internal_error",
-			Message: "An error occurred while retrieving the service version",
-			Details: err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, version)
-}
-
 // CreateService godoc
 // @Summary Create a new service
 // @Description Create a new service with the given name and description

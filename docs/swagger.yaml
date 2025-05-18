@@ -1,5 +1,16 @@
 basePath: /api/v1
 definitions:
+  handlers.ErrorResponse:
+    properties:
+      code:
+        description: Machine-readable error code
+        type: string
+      details:
+        description: Optional additional details
+      message:
+        description: Human-readable error message
+        type: string
+    type: object
   models.Pagination:
     properties:
       current_page:
@@ -301,52 +312,120 @@ paths:
       summary: Update a service
       tags:
       - services
-  /services/{id}/versions/{versionId}:
-    get:
+  /versions:
+    post:
       consumes:
       - application/json
-      description: Get details of a service version by ID
+      description: Create a new version for a service
       parameters:
-      - description: Service ID
+      - description: Version details
+        in: body
+        name: version
+        required: true
+        schema:
+          $ref: '#/definitions/models.Version'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created version
+          schema:
+            $ref: '#/definitions/models.Version'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Failed to create version
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Create a new version
+      tags:
+      - versions
+  /versions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a version by ID
+      parameters:
+      - description: Version ID
         in: path
-        minimum: 1
         name: id
         required: true
         type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Version deleted successfully
+        "400":
+          description: Invalid version ID
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Failed to delete version
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Delete a version
+      tags:
+      - versions
+    get:
+      consumes:
+      - application/json
+      description: Get a version by ID
+      parameters:
       - description: Version ID
         in: path
-        minimum: 1
-        name: versionId
+        name: id
         required: true
         type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: Service version details
+          description: Version details
           schema:
             $ref: '#/definitions/models.Version'
         "400":
-          description: Bad request
+          description: Invalid version ID
           schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Service version not found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handlers.ErrorResponse'
         "500":
-          description: Error message
+          description: Failed to get version
           schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Get a service version
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get a version by ID
       tags:
-      - services
+      - versions
+    put:
+      consumes:
+      - application/json
+      description: Update a version by ID
+      parameters:
+      - description: Version details
+        in: body
+        name: version
+        required: true
+        schema:
+          $ref: '#/definitions/models.Version'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated version
+          schema:
+            $ref: '#/definitions/models.Version'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Failed to update version
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Update a version
+      tags:
+      - versions
 schemes:
 - http
 swagger: "2.0"

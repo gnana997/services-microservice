@@ -312,9 +312,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/services/{id}/versions/{versionId}": {
-            "get": {
-                "description": "Get details of a service version by ID",
+        "/versions": {
+            "post": {
+                "description": "Create a new version for a service",
                 "consumes": [
                     "application/json"
                 ],
@@ -322,59 +322,164 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "services"
+                    "versions"
                 ],
-                "summary": "Get a service version",
+                "summary": "Create a new version",
                 "parameters": [
                     {
-                        "minimum": 1,
-                        "type": "integer",
-                        "description": "Service ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
+                        "description": "Version details",
+                        "name": "version",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Version"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created version",
+                        "schema": {
+                            "$ref": "#/definitions/models.Version"
+                        }
                     },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create version",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/versions/{id}": {
+            "get": {
+                "description": "Get a version by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "versions"
+                ],
+                "summary": "Get a version by ID",
+                "parameters": [
                     {
-                        "minimum": 1,
                         "type": "integer",
                         "description": "Version ID",
-                        "name": "versionId",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Service version details",
+                        "description": "Version details",
                         "schema": {
                             "$ref": "#/definitions/models.Version"
                         }
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "Invalid version ID",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Service version not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Error message",
+                        "description": "Failed to get version",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update a version by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "versions"
+                ],
+                "summary": "Update a version",
+                "parameters": [
+                    {
+                        "description": "Version details",
+                        "name": "version",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Version"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated version",
+                        "schema": {
+                            "$ref": "#/definitions/models.Version"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update version",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a version by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "versions"
+                ],
+                "summary": "Delete a version",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Version ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Version deleted successfully"
+                    },
+                    "400": {
+                        "description": "Invalid version ID",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete version",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     }
                 }
@@ -382,6 +487,22 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "handlers.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Machine-readable error code",
+                    "type": "string"
+                },
+                "details": {
+                    "description": "Optional additional details"
+                },
+                "message": {
+                    "description": "Human-readable error message",
+                    "type": "string"
+                }
+            }
+        },
         "models.Pagination": {
             "type": "object",
             "properties": {

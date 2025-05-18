@@ -12,7 +12,6 @@ import (
 type mockRepo struct {
 	ListServicesFn      func(ctx context.Context, filter models.ServiceFilter) ([]models.ServiceModel, int, error)
 	GetServiceFn        func(ctx context.Context, id uint) (*models.Service, error)
-	GetServiceVersionFn  func(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error)
 	CreateServiceFn     func(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
 	UpdateServiceFn     func(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
 	DeleteServiceFn     func(ctx context.Context, id uint) error
@@ -23,9 +22,6 @@ func (m *mockRepo) ListServices(ctx context.Context, filter models.ServiceFilter
 }
 func (m *mockRepo) GetService(ctx context.Context, id uint) (*models.Service, error) {
 	return m.GetServiceFn(ctx, id)
-}
-func (m *mockRepo) GetServiceVersion(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error) {
-	return m.GetServiceVersionFn(ctx, serviceID, versionID)
 }
 func (m *mockRepo) CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
 	return m.CreateServiceFn(ctx, service)
@@ -43,7 +39,7 @@ func TestListServices(t *testing.T) {
 			return []models.ServiceModel{{ID: 1, Name: "Test Service"}}, 1, nil
 		},
 	}
-	bs := NewBusinessService(repo)
+	bs := NewServiceBusiness(repo)
 	resp, err := bs.ListServices(context.Background(), models.ServiceFilter{Page: 1, Limit: 10})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -59,7 +55,7 @@ func TestGetService_NotFound(t *testing.T) {
 			return nil, repository.ErrNotFound
 		},
 	}
-	bs := NewBusinessService(repo)
+	bs := NewServiceBusiness(repo)
 	_, err := bs.GetService(context.Background(), 1)
 	if !errors.Is(err, ErrServiceNotFound) {
 		t.Errorf("expected ErrServiceNotFound, got %v", err)
@@ -72,25 +68,12 @@ func TestGetService_Success(t *testing.T) {
 			return &models.Service{ID: 1, Name: "Test Service", Description: "Test Description", CreatedAt: time.Now(), UpdatedAt: time.Now(), VersionCount: 1}, nil
 		},
 	}
-	bs := NewBusinessService(repo)
+	bs := NewServiceBusiness(repo)
 	service, err := bs.GetService(context.Background(), 1)
 	if err != nil || service.ID != 1 {
 		t.Errorf("unexpected result: %v, %v", service, err)
 	}
 }
-
-func TestGetServiceVersion(t *testing.T) {
-	repo := &mockRepo{
-		GetServiceVersionFn: func(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error) {
-			return &models.Version{ID: versionID, Version: "1.0.0"}, nil
-		},
-	}
-	bs := NewBusinessService(repo)
-	version, err := bs.GetServiceVersion(context.Background(), 1, 2)
-	if err != nil || version.ID != 2 {
-		t.Errorf("unexpected result: %v, %v", version, err)
-	}
-} 
 
 func TestCreateService(t *testing.T) {
 	repo := &mockRepo{
@@ -98,7 +81,7 @@ func TestCreateService(t *testing.T) {
 			return &models.ServiceModel{ID: 1, Name: "Test Service"}, nil
 		},
 	}
-	bs := NewBusinessService(repo)
+	bs := NewServiceBusiness(repo)
 	service, err := bs.CreateService(context.Background(), models.ServiceModel{Name: "Test Service"})
 	if err != nil || service.ID != 1 {
 		t.Errorf("unexpected result: %v, %v", service, err)
@@ -111,7 +94,7 @@ func TestUpdateService(t *testing.T) {
 			return &models.ServiceModel{ID: 1, Name: "Updated Service"}, nil
 		},
 	}
-	bs := NewBusinessService(repo)
+	bs := NewServiceBusiness(repo)
 	service, err := bs.UpdateService(context.Background(), models.ServiceModel{ID: 1, Name: "Updated Service"})
 	if err != nil || service.ID != 1 {
 		t.Errorf("unexpected result: %v, %v", service, err)
@@ -124,7 +107,7 @@ func TestDeleteService(t *testing.T) {
 			return nil
 		},
 	}
-	bs := NewBusinessService(repo)
+	bs := NewServiceBusiness(repo)
 	err := bs.DeleteService(context.Background(), 1)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
