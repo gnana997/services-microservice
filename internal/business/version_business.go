@@ -17,9 +17,9 @@ type VersionBusiness interface {
 	// Returns the created version or an error if the version creation fails.
 	CreateVersion(ctx context.Context, version models.Version) (*models.Version, error)
 
-	// GetVersion retrieves a version by its ID
+	// GetVersion retrieves a version by its ID and service ID
 	// Returns the version or ErrVersionNotFound if it doesn't exist.
-	GetVersion(ctx context.Context, id uint) (*models.Version, error)
+	GetVersion(ctx context.Context, serviceId uint, versionId uint) (*models.Version, error)
 
 	// UpdateVersion updates a version
 	// Returns the updated version or an error if the version update fails or if the version is not found.
@@ -27,7 +27,7 @@ type VersionBusiness interface {
 
 	// DeleteVersion deletes a version
 	// Returns an error if the version deletion fails or if the version is not found.
-	DeleteVersion(ctx context.Context, id uint) error
+	DeleteVersion(ctx context.Context, versionId uint, serviceId uint) error
 }
 
 type versionBusinessImpl struct {
@@ -50,8 +50,8 @@ func (b *versionBusinessImpl) CreateVersion(ctx context.Context, version models.
 
 // GetVersion retrieves a version by its ID
 // Returns the version or ErrVersionNotFound if it doesn't exist.
-func (b *versionBusinessImpl) GetVersion(ctx context.Context, id uint) (*models.Version, error) {
-	version, err := b.repo.GetVersion(ctx, id)
+func (b *versionBusinessImpl) GetVersion(ctx context.Context, serviceId uint, versionId uint) (*models.Version, error) {
+	version, err := b.repo.GetVersion(ctx, versionId, serviceId)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrVersionNotFound
@@ -64,11 +64,25 @@ func (b *versionBusinessImpl) GetVersion(ctx context.Context, id uint) (*models.
 // UpdateVersion updates a version
 // Returns the updated version or an error if the version update fails or if the version is not found.
 func (b *versionBusinessImpl) UpdateVersion(ctx context.Context, version models.Version) (*models.Version, error) {
-	return b.repo.UpdateVersion(ctx, version)
+	updatedVersion, err := b.repo.UpdateVersion(ctx, version)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, ErrVersionNotFound
+		}
+		return nil, err
+	}
+	return updatedVersion, nil
 }
 
 // DeleteVersion deletes a version
 // Returns an error if the version deletion fails or if the version is not found.
-func (b *versionBusinessImpl) DeleteVersion(ctx context.Context, id uint) error {
-	return b.repo.DeleteVersion(ctx, id)
+func (b *versionBusinessImpl) DeleteVersion(ctx context.Context, versionId uint, serviceId uint) error {
+	err := b.repo.DeleteVersion(ctx, versionId, serviceId)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrVersionNotFound
+		}
+		return err
+	}
+	return nil
 }

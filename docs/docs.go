@@ -104,7 +104,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.ServiceModel"
+                            "$ref": "#/definitions/models.ServiceRequest"
                         }
                     }
                 ],
@@ -136,7 +136,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/services/{id}": {
+        "/services/{sid}": {
             "get": {
                 "description": "Get details of a service by ID",
                 "consumes": [
@@ -154,7 +154,7 @@ const docTemplate = `{
                         "minimum": 1,
                         "type": "integer",
                         "description": "Service ID",
-                        "name": "id",
+                        "name": "sid",
                         "in": "path",
                         "required": true
                     }
@@ -206,7 +206,7 @@ const docTemplate = `{
                         "minimum": 1,
                         "type": "integer",
                         "description": "Service ID",
-                        "name": "id",
+                        "name": "sid",
                         "in": "path",
                         "required": true
                     }
@@ -261,7 +261,7 @@ const docTemplate = `{
                         "minimum": 1,
                         "type": "integer",
                         "description": "Service ID",
-                        "name": "id",
+                        "name": "sid",
                         "in": "path",
                         "required": true
                     },
@@ -271,7 +271,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.ServiceModel"
+                            "$ref": "#/definitions/models.ServiceRequest"
                         }
                     }
                 ],
@@ -312,7 +312,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/versions": {
+        "/services/{sid}/versions": {
             "post": {
                 "description": "Create a new version for a service",
                 "consumes": [
@@ -327,12 +327,19 @@ const docTemplate = `{
                 "summary": "Create a new version",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Service ID",
+                        "name": "sid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Version details",
                         "name": "version",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Version"
+                            "$ref": "#/definitions/models.VersionRequest"
                         }
                     }
                 ],
@@ -358,7 +365,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/versions/{id}": {
+        "/services/{sid}/versions/{vid}": {
             "get": {
                 "description": "Get a version by ID",
                 "consumes": [
@@ -374,8 +381,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "Service ID",
+                        "name": "sid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
                         "description": "Version ID",
-                        "name": "id",
+                        "name": "vid",
                         "in": "path",
                         "required": true
                     }
@@ -389,6 +403,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Invalid version ID",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Version not found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -415,12 +435,26 @@ const docTemplate = `{
                 "summary": "Update a version",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Service ID",
+                        "name": "sid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Version ID",
+                        "name": "vid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Version details",
                         "name": "version",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Version"
+                            "$ref": "#/definitions/models.VersionRequest"
                         }
                     }
                 ],
@@ -433,6 +467,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Version not found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -460,8 +500,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "Service ID",
+                        "name": "sid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
                         "description": "Version ID",
-                        "name": "id",
+                        "name": "vid",
                         "in": "path",
                         "required": true
                     }
@@ -472,6 +519,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Invalid version ID",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Version not found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -588,6 +641,19 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ServiceRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Manages user authentication and profiles"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "User Service"
+                }
+            }
+        },
         "models.ServiceResponse": {
             "type": "object",
             "properties": {
@@ -628,6 +694,19 @@ const docTemplate = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2025-05-01T00:00:00Z"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "models.VersionRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Initial release"
                 },
                 "version": {
                     "type": "string",

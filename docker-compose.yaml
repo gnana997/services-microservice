@@ -10,8 +10,6 @@ services:
       - PORT=8080
     depends_on:
       - db
-    volumes:
-      - .:/app
     command: ./main
 
   db:

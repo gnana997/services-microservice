@@ -58,3 +58,15 @@ type Pagination struct {
 	TotalItems   int `json:"total_items" example:"50"`
 	ItemsPerPage int `json:"items_per_page" example:"10"`
 }
+
+// VersionRequest represents the request body for creating/updating a version
+type VersionRequest struct {
+	Version     string `json:"version" example:"1.0.0"`
+	Description string `json:"description" example:"Initial release"`
+}
+
+// ServiceRequest represents the request body for creating/updating a service
+type ServiceRequest struct {
+	Name        string `json:"name" example:"User Service"`
+	Description string `json:"description" example:"Manages user authentication and profiles"`
+}

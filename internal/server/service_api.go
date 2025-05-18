@@ -86,21 +86,20 @@ func (s *Server) setupRoutes() {
 		services := v1.Group("/services")
 		{
 			services.GET("", serviceHandler.ListServices)
-			services.GET("/:id", serviceHandler.GetService)
+			services.GET("/:sid", serviceHandler.GetService)
 			services.POST("", serviceHandler.CreateService)
-			services.PATCH("/:id", serviceHandler.UpdateService)
-			services.DELETE("/:id", serviceHandler.DeleteService)
-		}
-
-		// Versions endpoints
-		versions := v1.Group("/versions")
-		{
-			versions.POST("", versionHandler.CreateVersion)
-			versions.GET("/:id", versionHandler.GetVersion)
-			versions.PUT("/:id", versionHandler.UpdateVersion)
-			versions.DELETE("/:id", versionHandler.DeleteVersion)
+			services.PATCH("/:sid", serviceHandler.UpdateService)
+			services.DELETE("/:sid", serviceHandler.DeleteService)
 		}
 		
+		// Versions endpoints with renamed parameter to avoid conflict
+		versions := v1.Group("/services/:sid/versions")
+		{
+			versions.POST("", versionHandler.CreateVersion)
+			versions.GET("/:vid", versionHandler.GetVersion)
+			versions.PUT("/:vid", versionHandler.UpdateVersion)
+			versions.DELETE("/:vid", versionHandler.DeleteVersion)
+		}
 	}
 
 	// Enhanced health check

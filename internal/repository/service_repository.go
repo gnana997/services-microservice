@@ -26,11 +26,11 @@ type ServiceRepository interface {
 	
 	// CreateService creates a new service
 	// It returns the created service or an error if the service creation fails.
-	CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
+	CreateService(ctx context.Context, service models.Service) (*models.Service, error)
 
 	// UpdateService updates a service
 	// It returns the updated service or an error if the service update fails or if the service is not found.
-	UpdateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
+	UpdateService(ctx context.Context, service models.Service) (*models.Service, error)
 
 	// DeleteService deletes a service
 	// It returns an error if the service deletion fails or if the service is not found.
@@ -165,27 +165,9 @@ func (r *serviceRepositoryImpl) GetService(ctx context.Context, id uint) (*model
 	return &service, nil
 }
 
-// GetServiceVersion returns a single version for a service
-func (r *serviceRepositoryImpl) GetServiceVersion(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error) {
-	var version models.Version
-	
-	err := r.db.WithContext(ctx).
-		Where("service_id = ? AND id = ?", serviceID, versionID).
-		First(&version).Error
-	
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrNotFound
-		}
-		return nil, err
-	}
-
-	return &version, nil
-}
-
 // CreateService creates a new service
 // It returns the created service or an error if the service creation fails.
-func (r *serviceRepositoryImpl) CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
+func (r *serviceRepositoryImpl) CreateService(ctx context.Context, service models.Service) (*models.Service, error) {
 	if err := r.db.WithContext(ctx).Model(&models.Service{}).Create(&service).Error; err != nil {
 		return nil, err
 	}
@@ -193,23 +175,44 @@ func (r *serviceRepositoryImpl) CreateService(ctx context.Context, service model
 }
 
 // UpdateService updates a service
-func (r *serviceRepositoryImpl) UpdateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
-	if err := r.db.WithContext(ctx).Model(&models.Service{}).Where("id = ?", service.ID).Updates(&service).Error; err != nil {
+func (r *serviceRepositoryImpl) UpdateService(ctx context.Context, service models.Service) (*models.Service, error) {
+	result := r.db.WithContext(ctx).Model(&models.Service{}).Where("id = ?", service.ID).Updates(&service)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	
+	// Check if any rows were affected (record exists)
+	if result.RowsAffected == 0 {
+		return nil, ErrNotFound
+	}
+	
+	// Fetch the updated record to return
+	var updatedService models.Service
+	if err := r.db.WithContext(ctx).First(&updatedService, service.ID).Error; err != nil {
 		return nil, err
 	}
-	return &service, nil
+	
+	return &updatedService, nil
 }
 
 // DeleteService deletes a service by ID and all the versions of the service
 func (r *serviceRepositoryImpl) DeleteService(ctx context.Context, id uint) error {
-	if err := r.db.WithContext(ctx).Delete(&models.Service{}, id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ErrNotFound
-		}
-		return err
+	
+	// Delete all versions of the service
+	result := r.db.WithContext(ctx).Where("service_id = ?", id).Delete(&models.Version{})
+	if result.Error != nil {
+		return result.Error
 	}
-	if err := r.db.WithContext(ctx).Where("service_id = ?", id).Delete(&models.Version{}).Error; err != nil {
-		return err
+	
+	// Delete the service
+	result = r.db.WithContext(ctx).Delete(&models.Service{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	
+	// Check if any rows were affected (record exists)
+	if result.RowsAffected == 0 {
+		return ErrNotFound
 	}
 	return nil
 }

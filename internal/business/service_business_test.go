@@ -12,8 +12,8 @@ import (
 type mockRepo struct {
 	ListServicesFn      func(ctx context.Context, filter models.ServiceFilter) ([]models.ServiceModel, int, error)
 	GetServiceFn        func(ctx context.Context, id uint) (*models.Service, error)
-	CreateServiceFn     func(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
-	UpdateServiceFn     func(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
+	CreateServiceFn     func(ctx context.Context, service models.Service) (*models.Service, error)
+	UpdateServiceFn     func(ctx context.Context, service models.Service) (*models.Service, error)
 	DeleteServiceFn     func(ctx context.Context, id uint) error
 }
 
@@ -23,10 +23,10 @@ func (m *mockRepo) ListServices(ctx context.Context, filter models.ServiceFilter
 func (m *mockRepo) GetService(ctx context.Context, id uint) (*models.Service, error) {
 	return m.GetServiceFn(ctx, id)
 }
-func (m *mockRepo) CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
+func (m *mockRepo) CreateService(ctx context.Context, service models.Service) (*models.Service, error) {
 	return m.CreateServiceFn(ctx, service)
 }
-func (m *mockRepo) UpdateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
+func (m *mockRepo) UpdateService(ctx context.Context, service models.Service) (*models.Service, error) {
 	return m.UpdateServiceFn(ctx, service)
 }
 func (m *mockRepo) DeleteService(ctx context.Context, id uint) error {
@@ -77,12 +77,12 @@ func TestGetService_Success(t *testing.T) {
 
 func TestCreateService(t *testing.T) {
 	repo := &mockRepo{
-		CreateServiceFn: func(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
-			return &models.ServiceModel{ID: 1, Name: "Test Service"}, nil
+		CreateServiceFn: func(ctx context.Context, service models.Service) (*models.Service, error) {
+			return &models.Service{ID: 1, Name: "Test Service"}, nil
 		},
 	}
 	bs := NewServiceBusiness(repo)
-	service, err := bs.CreateService(context.Background(), models.ServiceModel{Name: "Test Service"})
+	service, err := bs.CreateService(context.Background(), models.Service{Name: "Test Service"})
 	if err != nil || service.ID != 1 {
 		t.Errorf("unexpected result: %v, %v", service, err)
 	}
@@ -90,12 +90,12 @@ func TestCreateService(t *testing.T) {
 
 func TestUpdateService(t *testing.T) {
 	repo := &mockRepo{
-		UpdateServiceFn: func(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
-			return &models.ServiceModel{ID: 1, Name: "Updated Service"}, nil
+		UpdateServiceFn: func(ctx context.Context, service models.Service) (*models.Service, error) {
+			return &models.Service{ID: 1, Name: "Updated Service"}, nil
 		},
 	}
 	bs := NewServiceBusiness(repo)
-	service, err := bs.UpdateService(context.Background(), models.ServiceModel{ID: 1, Name: "Updated Service"})
+	service, err := bs.UpdateService(context.Background(), models.Service{ID: 1, Name: "Updated Service"})
 	if err != nil || service.ID != 1 {
 		t.Errorf("unexpected result: %v, %v", service, err)
 	}

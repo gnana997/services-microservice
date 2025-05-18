@@ -26,20 +26,37 @@ func NewVersionHandler(versionBusiness business.VersionBusiness) *VersionHandler
 // @Tags versions
 // @Accept json
 // @Produce json
-// @Param version body models.Version true "Version details"
+// @Param sid path integer true "Service ID"
+// @Param version body models.VersionRequest true "Version details"
 // @Success 201 {object} models.Version "Created version"
 // @Failure 400 {object} ErrorResponse "Invalid request body"
 // @Failure 500 {object} ErrorResponse "Failed to create version"
-// @Router /versions [post]
+// @Router /services/{sid}/versions [post]
 func (h *VersionHandler) CreateVersion(c *gin.Context) {
-	var version models.Version
-	if err := c.ShouldBindJSON(&version); err != nil {
+	serviceId, err := strconv.ParseUint(c.Param("sid"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    "invalid_service_id",
+			Message: "Invalid service ID",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	var req models.VersionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Code:    "invalid_request_body",
 			Message: "Invalid request body",
 			Details: err.Error(),
 		})
 		return
+	}
+
+	version := models.Version{
+		ServiceID:   uint(serviceId),
+		Version:     req.Version,
+		Description: req.Description,
 	}
 
 	createdVersion, err := h.versionBusiness.CreateVersion(c.Request.Context(), version)
@@ -61,13 +78,25 @@ func (h *VersionHandler) CreateVersion(c *gin.Context) {
 // @Tags versions
 // @Accept json
 // @Produce json
-// @Param id path integer true "Version ID"
+// @Param sid path integer true "Service ID"
+// @Param vid path integer true "Version ID"
 // @Success 200 {object} models.Version "Version details"
 // @Failure 400 {object} ErrorResponse "Invalid version ID"
+// @Failure 404 {object} ErrorResponse "Version not found"
 // @Failure 500 {object} ErrorResponse "Failed to get version"
-// @Router /versions/{id} [get]
+// @Router /services/{sid}/versions/{vid} [get]
 func (h *VersionHandler) GetVersion(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	serviceId, err := strconv.ParseUint(c.Param("sid"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    "invalid_service_id",
+			Message: "Invalid service ID",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	versionId, err := strconv.ParseUint(c.Param("vid"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Code:    "invalid_version_id",
@@ -77,8 +106,16 @@ func (h *VersionHandler) GetVersion(c *gin.Context) {
 		return
 	}
 
-	version, err := h.versionBusiness.GetVersion(c.Request.Context(), uint(id))
+	version, err := h.versionBusiness.GetVersion(c.Request.Context(), uint(serviceId), uint(versionId))
 	if err != nil {
+		if err == business.ErrVersionNotFound {
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Code:    "version_not_found",
+				Message: "Version not found",
+				Details: "The requested version does not exist",
+			})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Code:    "internal_server_error",
 			Message: "Failed to get version",
@@ -96,14 +133,37 @@ func (h *VersionHandler) GetVersion(c *gin.Context) {
 // @Tags versions
 // @Accept json
 // @Produce json
-// @Param version body models.Version true "Version details"
+// @Param sid path integer true "Service ID"
+// @Param vid path integer true "Version ID"
+// @Param version body models.VersionRequest true "Version details"
 // @Success 200 {object} models.Version "Updated version"
 // @Failure 400 {object} ErrorResponse "Invalid request body"
+// @Failure 404 {object} ErrorResponse "Version not found"
 // @Failure 500 {object} ErrorResponse "Failed to update version"
-// @Router /versions/{id} [put]
+// @Router /services/{sid}/versions/{vid} [put]
 func (h *VersionHandler) UpdateVersion(c *gin.Context) {
-	var version models.Version
-	if err := c.ShouldBindJSON(&version); err != nil {
+	serviceId, err := strconv.ParseUint(c.Param("sid"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    "invalid_service_id",
+			Message: "Invalid service ID",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	versionId, err := strconv.ParseUint(c.Param("vid"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    "invalid_version_id",
+			Message: "Invalid version ID",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	var req models.VersionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Code:    "invalid_request_body",
 			Message: "Invalid request body",
@@ -112,8 +172,23 @@ func (h *VersionHandler) UpdateVersion(c *gin.Context) {
 		return
 	}
 
+	version := models.Version{
+		ID:          uint(versionId),
+		ServiceID:   uint(serviceId),
+		Version:     req.Version,
+		Description: req.Description,
+	}
+
 	updatedVersion, err := h.versionBusiness.UpdateVersion(c.Request.Context(), version)
 	if err != nil {
+		if err == business.ErrVersionNotFound {
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Code:    "version_not_found",
+				Message: "Version not found",
+				Details: "The requested version does not exist",
+			})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Code:    "internal_server_error",
 			Message: "Failed to update version",
@@ -131,13 +206,25 @@ func (h *VersionHandler) UpdateVersion(c *gin.Context) {
 // @Tags versions
 // @Accept json
 // @Produce json
-// @Param id path integer true "Version ID"
+// @Param sid path integer true "Service ID"
+// @Param vid path integer true "Version ID"
 // @Success 204 "Version deleted successfully"
 // @Failure 400 {object} ErrorResponse "Invalid version ID"
+// @Failure 404 {object} ErrorResponse "Version not found"
 // @Failure 500 {object} ErrorResponse "Failed to delete version"
-// @Router /versions/{id} [delete]
+// @Router /services/{sid}/versions/{vid} [delete]
 func (h *VersionHandler) DeleteVersion(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	serviceId, err := strconv.ParseUint(c.Param("sid"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    "invalid_service_id",
+			Message: "Invalid service ID",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	versionId, err := strconv.ParseUint(c.Param("vid"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Code:    "invalid_version_id",
@@ -147,8 +234,16 @@ func (h *VersionHandler) DeleteVersion(c *gin.Context) {
 		return
 	}
 
-	err = h.versionBusiness.DeleteVersion(c.Request.Context(), uint(id))
+	err = h.versionBusiness.DeleteVersion(c.Request.Context(), uint(versionId), uint(serviceId))
 	if err != nil {
+		if err == business.ErrVersionNotFound {
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Code:    "version_not_found",
+				Message: "Version not found",
+				Details: "The requested version does not exist",
+			})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Code:    "internal_server_error",
 			Message: "Failed to delete version",

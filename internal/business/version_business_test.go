@@ -9,21 +9,21 @@ import (
 
 type mockVersionRepository struct {
 	CreateVersionFn func(ctx context.Context, version models.Version) (*models.Version, error)
-	GetVersionFn    func(ctx context.Context, id uint) (*models.Version, error)
+	GetVersionFn    func(ctx context.Context, versionId uint, serviceId uint) (*models.Version, error)
 	UpdateVersionFn func(ctx context.Context, version models.Version) (*models.Version, error)
-	DeleteVersionFn func(ctx context.Context, id uint) error
+	DeleteVersionFn func(ctx context.Context, versionId uint, serviceId uint) error
 }
 
 func (m *mockVersionRepository) CreateVersion(ctx context.Context, version models.Version) (*models.Version, error) {
 	return &models.Version{ID: 1, Version: "1.0.0"}, nil
 }
-func (m *mockVersionRepository) GetVersion(ctx context.Context, id uint) (*models.Version, error) {
+func (m *mockVersionRepository) GetVersion(ctx context.Context, versionId uint, serviceId uint) (*models.Version, error) {
 	return &models.Version{ID: 1, Version: "1.0.0"}, nil
 }
 func (m *mockVersionRepository) UpdateVersion(ctx context.Context, version models.Version) (*models.Version, error) {
 	return &models.Version{ID: 1, Version: "1.0.0"}, nil
 }
-func (m *mockVersionRepository) DeleteVersion(ctx context.Context, id uint) error {
+func (m *mockVersionRepository) DeleteVersion(ctx context.Context, versionId uint, serviceId uint) error {
 	return nil
 }
 
@@ -53,7 +53,7 @@ func TestGetVersion(t *testing.T) {
 	repo := &mockVersionRepository{}
 	business := NewVersionBusiness(repo)
 
-	version, err := business.GetVersion(context.Background(), 1)
+	version, err := business.GetVersion(context.Background(), 1, 1)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -94,7 +94,7 @@ func TestDeleteVersion(t *testing.T) {
 	repo := &mockVersionRepository{}
 	business := NewVersionBusiness(repo)
 
-	err := business.DeleteVersion(context.Background(), 1)
+	err := business.DeleteVersion(context.Background(), 1, 1)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}

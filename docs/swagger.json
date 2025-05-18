@@ -101,7 +101,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.ServiceModel"
+                            "$ref": "#/definitions/models.ServiceRequest"
                         }
                     }
                 ],
@@ -133,7 +133,7 @@
                 }
             }
         },
-        "/services/{id}": {
+        "/services/{sid}": {
             "get": {
                 "description": "Get details of a service by ID",
                 "consumes": [
@@ -151,7 +151,7 @@
                         "minimum": 1,
                         "type": "integer",
                         "description": "Service ID",
-                        "name": "id",
+                        "name": "sid",
                         "in": "path",
                         "required": true
                     }
@@ -203,7 +203,7 @@
                         "minimum": 1,
                         "type": "integer",
                         "description": "Service ID",
-                        "name": "id",
+                        "name": "sid",
                         "in": "path",
                         "required": true
                     }
@@ -258,7 +258,7 @@
                         "minimum": 1,
                         "type": "integer",
                         "description": "Service ID",
-                        "name": "id",
+                        "name": "sid",
                         "in": "path",
                         "required": true
                     },
@@ -268,7 +268,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.ServiceModel"
+                            "$ref": "#/definitions/models.ServiceRequest"
                         }
                     }
                 ],
@@ -309,7 +309,7 @@
                 }
             }
         },
-        "/versions": {
+        "/services/{sid}/versions": {
             "post": {
                 "description": "Create a new version for a service",
                 "consumes": [
@@ -324,12 +324,19 @@
                 "summary": "Create a new version",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Service ID",
+                        "name": "sid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Version details",
                         "name": "version",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Version"
+                            "$ref": "#/definitions/models.VersionRequest"
                         }
                     }
                 ],
@@ -355,7 +362,7 @@
                 }
             }
         },
-        "/versions/{id}": {
+        "/services/{sid}/versions/{vid}": {
             "get": {
                 "description": "Get a version by ID",
                 "consumes": [
@@ -371,8 +378,15 @@
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "Service ID",
+                        "name": "sid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
                         "description": "Version ID",
-                        "name": "id",
+                        "name": "vid",
                         "in": "path",
                         "required": true
                     }
@@ -386,6 +400,12 @@
                     },
                     "400": {
                         "description": "Invalid version ID",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Version not found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -412,12 +432,26 @@
                 "summary": "Update a version",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Service ID",
+                        "name": "sid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Version ID",
+                        "name": "vid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Version details",
                         "name": "version",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.Version"
+                            "$ref": "#/definitions/models.VersionRequest"
                         }
                     }
                 ],
@@ -430,6 +464,12 @@
                     },
                     "400": {
                         "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Version not found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -457,8 +497,15 @@
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "Service ID",
+                        "name": "sid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
                         "description": "Version ID",
-                        "name": "id",
+                        "name": "vid",
                         "in": "path",
                         "required": true
                     }
@@ -469,6 +516,12 @@
                     },
                     "400": {
                         "description": "Invalid version ID",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Version not found",
                         "schema": {
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
@@ -585,6 +638,19 @@
                 }
             }
         },
+        "models.ServiceRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Manages user authentication and profiles"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "User Service"
+                }
+            }
+        },
         "models.ServiceResponse": {
             "type": "object",
             "properties": {
@@ -625,6 +691,19 @@
                 "updated_at": {
                     "type": "string",
                     "example": "2025-05-01T00:00:00Z"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "models.VersionRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Initial release"
                 },
                 "version": {
                     "type": "string",

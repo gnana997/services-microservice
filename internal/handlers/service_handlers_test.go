@@ -19,8 +19,8 @@ type mockBusinessService struct {
 	ListServicesFn        func(ctx context.Context, filter models.ServiceFilter) (*models.ServiceResponse, error)
 	GetServiceFn          func(ctx context.Context, id uint) (*models.Service, error)
 	GetServiceVersionFn   func(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error)
-	CreateServiceFn       func(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
-	UpdateServiceFn       func(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
+	CreateServiceFn       func(ctx context.Context, service models.Service) (*models.Service, error)
+	UpdateServiceFn       func(ctx context.Context, service models.Service) (*models.Service, error)
 	DeleteServiceFn       func(ctx context.Context, id uint) error
 }
 
@@ -33,10 +33,10 @@ func (m *mockBusinessService) GetService(ctx context.Context, id uint) (*models.
 func (m *mockBusinessService) GetServiceVersion(ctx context.Context, serviceID uint, versionID uint) (*models.Version, error) {
 	return m.GetServiceVersionFn(ctx, serviceID, versionID)
 }
-func (m *mockBusinessService) CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
+func (m *mockBusinessService) CreateService(ctx context.Context, service models.Service) (*models.Service, error) {
 	return m.CreateServiceFn(ctx, service)
 }
-func (m *mockBusinessService) UpdateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
+func (m *mockBusinessService) UpdateService(ctx context.Context, service models.Service) (*models.Service, error) {
 	return m.UpdateServiceFn(ctx, service)
 }
 func (m *mockBusinessService) DeleteService(ctx context.Context, id uint) error {
@@ -71,7 +71,7 @@ func TestGetServiceHandler_NotFound(t *testing.T) {
 	}
 	h := NewServiceHandler(mockSvc)
 	r := gin.New()
-	r.GET("/services/:id", h.GetService)
+	r.GET("/services/:sid", h.GetService)
 
 	req, _ := http.NewRequest("GET", "/services/1", nil)
 	w := httptest.NewRecorder()
@@ -88,7 +88,7 @@ func TestGetServiceHandler_Success(t *testing.T) {
 	}
 	h := NewServiceHandler(mockSvc)
 	r := gin.New()
-	r.GET("/services/:id", h.GetService)
+	r.GET("/services/:sid", h.GetService)
 
 	req, _ := http.NewRequest("GET", "/services/1", nil)
 	w := httptest.NewRecorder()
@@ -100,8 +100,8 @@ func TestGetServiceHandler_Success(t *testing.T) {
 func TestCreateServiceHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockSvc := &mockBusinessService{
-		CreateServiceFn: func(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
-			return &models.ServiceModel{ID: 1, Name: "Test Service"}, nil
+		CreateServiceFn: func(ctx context.Context, service models.Service) (*models.Service, error) {
+			return &models.Service{ID: 1, Name: "Test Service"}, nil
 		},
 	}
 	h := NewServiceHandler(mockSvc)
@@ -118,13 +118,13 @@ func TestCreateServiceHandler(t *testing.T) {
 func TestUpdateServiceHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockSvc := &mockBusinessService{
-		UpdateServiceFn: func(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
-			return &models.ServiceModel{ID: 1, Name: "Updated Service"}, nil
+		UpdateServiceFn: func(ctx context.Context, service models.Service) (*models.Service, error) {
+			return &models.Service{ID: 1, Name: "Updated Service"}, nil
 		},
 	}
 	h := NewServiceHandler(mockSvc)
 	r := gin.New()
-	r.PATCH("/services/:id", h.UpdateService)
+	r.PATCH("/services/:sid", h.UpdateService)
 
 	req, _ := http.NewRequest("PATCH", "/services/1", bytes.NewBufferString(`{"name": "Updated Service"}`))
 	w := httptest.NewRecorder()
@@ -142,7 +142,7 @@ func TestDeleteServiceHandler(t *testing.T) {
 	}
 	h := NewServiceHandler(mockSvc)
 	r := gin.New()
-	r.DELETE("/services/:id", h.DeleteService)
+	r.DELETE("/services/:sid", h.DeleteService)
 
 	req, _ := http.NewRequest("DELETE", "/services/1", nil)
 	w := httptest.NewRecorder()

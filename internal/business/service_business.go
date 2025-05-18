@@ -25,11 +25,11 @@ type BusinessService interface {
 
 	// CreateService creates a new service
 	// Returns the created service or an error if the service creation fails.
-	CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
+	CreateService(ctx context.Context, service models.Service) (*models.Service, error)
 
 	// UpdateService updates a service
 	// Returns the updated service or an error if the service update fails or if the service is not found.
-	UpdateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error)
+	UpdateService(ctx context.Context, service models.Service) (*models.Service, error)
 
 	// DeleteService deletes a service and all the versions of the service
 	// Returns an error if the service deletion fails or if the service is not found.
@@ -81,16 +81,30 @@ func (s *serviceBusinessImpl) GetService(ctx context.Context, id uint) (*models.
 }
 
 // CreateService creates a new service
-func (s *serviceBusinessImpl) CreateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
+func (s *serviceBusinessImpl) CreateService(ctx context.Context, service models.Service) (*models.Service, error) {
 	return s.repo.CreateService(ctx, service)
 }
 
 // UpdateService updates a service
-func (s *serviceBusinessImpl) UpdateService(ctx context.Context, service models.ServiceModel) (*models.ServiceModel, error) {
-	return s.repo.UpdateService(ctx, service)
+func (s *serviceBusinessImpl) UpdateService(ctx context.Context, service models.Service) (*models.Service, error) {
+	updatedService, err := s.repo.UpdateService(ctx, service)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, ErrServiceNotFound
+		}
+		return nil, err
+	}
+	return updatedService, nil
 }
 
 // DeleteService deletes a service and all the versions of the service
 func (s *serviceBusinessImpl) DeleteService(ctx context.Context, id uint) error {
-	return s.repo.DeleteService(ctx, id)
+	err := s.repo.DeleteService(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrServiceNotFound
+		}
+		return err
+	}
+	return nil
 }

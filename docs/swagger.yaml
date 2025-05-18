@@ -72,6 +72,15 @@ definitions:
         example: 1
         type: integer
     type: object
+  models.ServiceRequest:
+    properties:
+      description:
+        example: Manages user authentication and profiles
+        type: string
+      name:
+        example: User Service
+        type: string
+    type: object
   models.ServiceResponse:
     properties:
       pagination:
@@ -100,6 +109,15 @@ definitions:
         type: integer
       updated_at:
         example: "2025-05-01T00:00:00Z"
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+  models.VersionRequest:
+    properties:
+      description:
+        example: Initial release
         type: string
       version:
         example: 1.0.0
@@ -171,7 +189,7 @@ paths:
         name: service
         required: true
         schema:
-          $ref: '#/definitions/models.ServiceModel'
+          $ref: '#/definitions/models.ServiceRequest'
       produces:
       - application/json
       responses:
@@ -194,14 +212,14 @@ paths:
       summary: Create a new service
       tags:
       - services
-  /services/{id}:
+  /services/{sid}:
     delete:
       description: Delete a service with the given ID
       parameters:
       - description: Service ID
         in: path
         minimum: 1
-        name: id
+        name: sid
         required: true
         type: integer
       responses:
@@ -236,7 +254,7 @@ paths:
       - description: Service ID
         in: path
         minimum: 1
-        name: id
+        name: sid
         required: true
         type: integer
       produces:
@@ -275,7 +293,7 @@ paths:
       - description: Service ID
         in: path
         minimum: 1
-        name: id
+        name: sid
         required: true
         type: integer
       - description: Service details
@@ -283,7 +301,7 @@ paths:
         name: service
         required: true
         schema:
-          $ref: '#/definitions/models.ServiceModel'
+          $ref: '#/definitions/models.ServiceRequest'
       produces:
       - application/json
       responses:
@@ -312,18 +330,23 @@ paths:
       summary: Update a service
       tags:
       - services
-  /versions:
+  /services/{sid}/versions:
     post:
       consumes:
       - application/json
       description: Create a new version for a service
       parameters:
+      - description: Service ID
+        in: path
+        name: sid
+        required: true
+        type: integer
       - description: Version details
         in: body
         name: version
         required: true
         schema:
-          $ref: '#/definitions/models.Version'
+          $ref: '#/definitions/models.VersionRequest'
       produces:
       - application/json
       responses:
@@ -342,15 +365,20 @@ paths:
       summary: Create a new version
       tags:
       - versions
-  /versions/{id}:
+  /services/{sid}/versions/{vid}:
     delete:
       consumes:
       - application/json
       description: Delete a version by ID
       parameters:
+      - description: Service ID
+        in: path
+        name: sid
+        required: true
+        type: integer
       - description: Version ID
         in: path
-        name: id
+        name: vid
         required: true
         type: integer
       produces:
@@ -360,6 +388,10 @@ paths:
           description: Version deleted successfully
         "400":
           description: Invalid version ID
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Version not found
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -374,9 +406,14 @@ paths:
       - application/json
       description: Get a version by ID
       parameters:
+      - description: Service ID
+        in: path
+        name: sid
+        required: true
+        type: integer
       - description: Version ID
         in: path
-        name: id
+        name: vid
         required: true
         type: integer
       produces:
@@ -388,6 +425,10 @@ paths:
             $ref: '#/definitions/models.Version'
         "400":
           description: Invalid version ID
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Version not found
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":
@@ -402,12 +443,22 @@ paths:
       - application/json
       description: Update a version by ID
       parameters:
+      - description: Service ID
+        in: path
+        name: sid
+        required: true
+        type: integer
+      - description: Version ID
+        in: path
+        name: vid
+        required: true
+        type: integer
       - description: Version details
         in: body
         name: version
         required: true
         schema:
-          $ref: '#/definitions/models.Version'
+          $ref: '#/definitions/models.VersionRequest'
       produces:
       - application/json
       responses:
@@ -417,6 +468,10 @@ paths:
             $ref: '#/definitions/models.Version'
         "400":
           description: Invalid request body
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Version not found
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":

@@ -80,19 +80,19 @@ func (h *ServiceHandler) ListServices(c *gin.Context) {
 // @Tags services
 // @Accept json
 // @Produce json
-// @Param id path integer true "Service ID" minimum(1)
+// @Param sid path integer true "Service ID" minimum(1)
 // @Success 200 {object} models.Service "Service details"
 // @Failure 400 {object} map[string]string "Bad request"
 // @Failure 404 {object} map[string]string "Service not found"
 // @Failure 500 {object} map[string]string "Error message"
-// @Router /services/{id} [get]
+// @Router /services/{sid} [get]
 func (h *ServiceHandler) GetService(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("sid"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Code:    "invalid_service_id",
 			Message: "The service ID must be a positive integer",
-			Details: fmt.Sprintf("Provided ID: %s", c.Param("id")),
+			Details: fmt.Sprintf("Provided ID: %s", c.Param("sid")),
 		})
 		return
 	}
@@ -123,20 +123,25 @@ func (h *ServiceHandler) GetService(c *gin.Context) {
 // @Tags services
 // @Accept json
 // @Produce json
-// @Param service body models.ServiceModel true "Service details"
+// @Param service body models.ServiceRequest true "Service details"
 // @Success 201 {object} models.ServiceModel "Created service"
 // @Failure 400 {object} map[string]string "Bad request"
 // @Failure 500 {object} map[string]string "Error message"
 // @Router /services [post]
 func (h *ServiceHandler) CreateService(c *gin.Context) {
-	var service models.ServiceModel
-	if err := c.ShouldBindJSON(&service); err != nil {
+	var req models.ServiceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Code:    "invalid_request_body",
 			Message: "Invalid request body",
 			Details: err.Error(),
 		})
 		return
+	}
+
+	service := models.Service{
+		Name:        req.Name,
+		Description: req.Description,
 	}
 
 	createdService, err := h.service.CreateService(c.Request.Context(), service)
@@ -158,16 +163,26 @@ func (h *ServiceHandler) CreateService(c *gin.Context) {
 // @Tags services
 // @Accept json
 // @Produce json
-// @Param id path integer true "Service ID" minimum(1)
-// @Param service body models.ServiceModel true "Service details"
+// @Param sid path integer true "Service ID" minimum(1)
+// @Param service body models.ServiceRequest true "Service details"
 // @Success 200 {object} models.ServiceModel "Updated service"
 // @Failure 400 {object} map[string]string "Bad request"
 // @Failure 404 {object} map[string]string "Service not found"
 // @Failure 500 {object} map[string]string "Error message"
-// @Router /services/{id} [patch]
+// @Router /services/{sid} [patch]
 func (h *ServiceHandler) UpdateService(c *gin.Context) {
-	var service models.ServiceModel
-	if err := c.ShouldBindJSON(&service); err != nil {
+	id, err := strconv.ParseUint(c.Param("sid"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Code:    "invalid_service_id",
+			Message: "Invalid service ID",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	var req models.ServiceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Code:    "invalid_request_body",
 			Message: "Invalid request body",
@@ -176,8 +191,21 @@ func (h *ServiceHandler) UpdateService(c *gin.Context) {
 		return
 	}
 
+	service := models.Service{
+		ID:          uint(id),
+		Name:        req.Name,
+		Description: req.Description,
+	}
+
 	updatedService, err := h.service.UpdateService(c.Request.Context(), service)
 	if err != nil {
+		if err == business.ErrServiceNotFound {
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Code:    "service_not_found",
+				Message: fmt.Sprintf("Service with ID %d could not be found", id),
+			})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Code:    "internal_error",
 			Message: "An error occurred while updating the service",
@@ -193,25 +221,32 @@ func (h *ServiceHandler) UpdateService(c *gin.Context) {
 // @Summary Delete a service
 // @Description Delete a service with the given ID
 // @Tags services
-// @Param id path integer true "Service ID" minimum(1)
+// @Param sid path integer true "Service ID" minimum(1)
 // @Success 204 "Service deleted successfully"
 // @Failure 400 {object} map[string]string "Bad request"
 // @Failure 404 {object} map[string]string "Service not found"
 // @Failure 500 {object} map[string]string "Error message"
-// @Router /services/{id} [delete]
+// @Router /services/{sid} [delete]
 func (h *ServiceHandler) DeleteService(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("sid"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Code:    "invalid_service_id",
 			Message: "The service ID must be a positive integer",
-			Details: fmt.Sprintf("Provided ID: %s", c.Param("id")),
+			Details: fmt.Sprintf("Provided ID: %s", c.Param("sid")),
 		})
 		return
 	}
 
 	err = h.service.DeleteService(c.Request.Context(), uint(id))
 	if err != nil {
+		if err == business.ErrServiceNotFound {
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Code:    "service_not_found",
+				Message: fmt.Sprintf("Service with ID %d could not be found", id),
+			})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Code:    "internal_error",
 			Message: "An error occurred while deleting the service",
