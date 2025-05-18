@@ -39,7 +39,9 @@ This will execute the `sample_data.sql` script and populate the database with sa
 
 ## API Endpoints
 
-### List Services
+### Services
+
+#### List Services
 
 ```
 GET /api/v1/services?name=search&page=1&limit=10&sort=name&order=asc
@@ -68,10 +70,10 @@ Response:
 }
 ```
 
-### Get Service
+#### Get Service
 
 ```
-GET /api/v1/services/:id
+GET /api/v1/services/:sid
 ```
 
 Response:
@@ -97,13 +99,86 @@ Response:
 }
 ```
 
-### Get Service Version
+#### Create Service
 
 ```
-GET api/v1/service/{id}/versions/{id}
+POST /api/v1/services
 ```
 
-Response:
+Request:
+
+```json
+{
+  "name": "User Service",
+  "description": "Manages user authentication and profiles"
+}
+```
+
+Response: `201 Created`
+
+```json
+{
+  "id": 1,
+  "name": "User Service",
+  "description": "Manages user authentication and profiles",
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-01T00:00:00Z"
+}
+```
+
+#### Update Service
+
+```
+PATCH /api/v1/services/:sid
+```
+
+Request:
+
+```json
+{
+  "name": "User Authentication Service",
+  "description": "Updated description"
+}
+```
+
+Response: `200 OK`
+
+```json
+{
+  "id": 1,
+  "name": "User Authentication Service",
+  "description": "Updated description",
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-01T00:00:00Z"
+}
+```
+
+#### Delete Service
+
+```
+DELETE /api/v1/services/:sid
+```
+
+Response: `204 No Content`
+
+### Versions
+
+#### Create Version
+
+```
+POST /api/v1/services/:sid/versions
+```
+
+Request:
+
+```json
+{
+  "version": "1.0.0",
+  "description": "Initial release"
+}
+```
+
+Response: `201 Created`
 
 ```json
 {
@@ -117,13 +192,111 @@ Response:
 }
 ```
 
+#### Get Version
+
+```
+GET /api/v1/services/:sid/versions/:vid
+```
+
+Response: `200 OK`
+
+```json
+{
+  "id": 1,
+  "service_id": 1,
+  "version": "1.0.0",
+  "description": "Initial release",
+  "is_active": true,
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-01T00:00:00Z"
+}
+```
+
+#### Update Version
+
+```
+PUT /api/v1/services/:sid/versions/:vid
+```
+
+Request:
+
+```json
+{
+  "version": "1.0.1",
+  "description": "Bug fixes"
+}
+```
+
+Response: `200 OK`
+
+```json
+{
+  "id": 1,
+  "service_id": 1,
+  "version": "1.0.1",
+  "description": "Bug fixes",
+  "is_active": true,
+  "created_at": "2024-01-01T00:00:00Z",
+  "updated_at": "2024-01-01T00:00:00Z"
+}
+```
+
+#### Delete Version
+
+```
+DELETE /api/v1/services/:sid/versions/:vid
+```
+
+Response: `204 No Content`
+
+### Error Responses
+
+All endpoints may return the following error responses:
+
+#### 400 Bad Request
+
+```json
+{
+  "code": "invalid_request_body",
+  "message": "Invalid request body",
+  "details": "error details"
+}
+```
+
+#### 404 Not Found
+
+```json
+{
+  "code": "service_not_found",
+  "message": "Service with ID 123 could not be found"
+}
+```
+
+```json
+{
+  "code": "version_not_found",
+  "message": "Version not found",
+  "details": "The requested version does not exist"
+}
+```
+
+#### 500 Internal Server Error
+
+```json
+{
+  "code": "internal_error",
+  "message": "An error occurred while processing the request",
+  "details": "error details"
+}
+```
+
 ### Health Check
 
 ```
 GET /health
 ```
 
-Response:
+Response: `200 OK`
 
 ```json
 {
@@ -149,12 +322,11 @@ To run tests:
 go test ./...
 ```
 
-## Future Enhancements
+## Required Future Enhancements
 
-- Authentication and authorization
-- CRUD operations for services and versions
-- Rate limiting
-- Request validation
-- Integration tests
-- Docker support
-- CI/CD pipeline
+- **Authentication and Authorization**: Implement Auth Middleware to support the authentication and authorization for all apis
+- **Caching Strategies**: Add Redis or in-memory caching for frequently accessed services and versions based on userId from authMiddleware
+- **Rate Limiting**: Implement request throttling to prevent DDOS attacks or API misuse strategy based on the requirements/micro-service usecase
+- **Request Validation**: Add input validation using a validation for handling various scenarios
+- **Observability & Monitoring**: Integrate with Prometheus and Grafana for metrics collection, alerting, and performance tracking
+- **Integration Tests**: Create end-to-end tests that verify the complete API functionality by spinning up a mock db and clean up after
